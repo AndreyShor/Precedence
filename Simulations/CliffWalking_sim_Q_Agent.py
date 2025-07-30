@@ -1,4 +1,5 @@
 import re
+from cv2 import log
 import gymnasium as gym
 import numpy as np
 
@@ -7,6 +8,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from Algorithm.Brain import QLearningAgent
+from logger import loggerCSV
 
 # Initialize the environment
 env = gym.make("CliffWalking-v0")
@@ -25,7 +27,7 @@ episode_lengths = []  # Length (number of steps) per episode
 episode_falls = []  # Number of falls off the cliff per episode
 
 agent = QLearningAgent(n_actions=env.action_space.n, n_states=env.observation_space.n) # type: ignore
-
+logger = loggerCSV("CliffWalking_sim_Q_Agent.csv", "cliff")
 # Training loop
 for episode in range(episodes):
     agent.reset()  # Reset agent's Q-table for each episode
@@ -67,13 +69,16 @@ for episode in range(episodes):
     episode_falls.append(number_falls)
     
     # Optionally print stats after every 100 episodes for feedback
+    logger.log_cliff(episode, total_reward, steps, number_falls)
+
     if episode % 10000 == 0:
         print(f"Episode {episode} - Total Reward: {total_reward} - Steps: {steps} - Falls: {number_falls}")
-
 # After training, calculate some statistics
 average_reward = np.mean(episode_rewards)
 average_length = np.mean(episode_lengths)
 average_falls = np.mean(episode_falls)
+
+logger.close()
 
 print(f"Training complete after {episodes} episodes!")
 print(f"Average Reward: {average_reward}")

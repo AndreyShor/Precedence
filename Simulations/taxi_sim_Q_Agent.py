@@ -7,7 +7,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from Algorithm.Brain import QLearningAgent
-
+from logger import loggerCSV
 # Initialize the environment
 env = gym.make("Taxi-v3")
 
@@ -26,7 +26,7 @@ episode_deliveries = []  # Number of successful passenger deliveries
 episode_drops = []  # Number of drops or pickups of ghost passengers
 
 agent = QLearningAgent(n_actions=env.action_space.n, n_states=env.observation_space.n) # type: ignore
-
+logger = loggerCSV("taxi_sim_Q_Agent.csv", "taxi")
 # Training loop
 for episode in range(episodes):
     agent.reset()  # Reset agent's Q-table for each episode
@@ -45,6 +45,7 @@ for episode in range(episodes):
         # Take the action and observe the next state, reward, and termination
         next_state, reward, done, truncated, info = env.step(action)
 
+        next_state = agent.update(state, action, reward, next_state, done)
 
         if reward == -10:  # If the agent falls off the cliff
             drop_passsenger_pick_ghost += 1
@@ -53,8 +54,6 @@ for episode in range(episodes):
             delivered_passenger += 1
 
         # Update Q-table with the agent's experience (It will also return the next state), the same as from env
-
-        next_state = agent.update(state, action, reward, next_state, done)
         
         # Accumulate total reward and step count
         total_reward += float(reward)
@@ -72,7 +71,7 @@ for episode in range(episodes):
     episode_lengths.append(steps)
     episode_drops.append(drop_passsenger_pick_ghost)
     episode_deliveries.append(delivered_passenger)
-    
+    logger.log_taxi(episode, total_reward, steps, drop_passsenger_pick_ghost, delivered_passenger)
     # Optionally print stats after every 100 episodes for feedback
     if episode % 10000 == 0:
         print(f"Episode {episode} - Total Reward: {total_reward} - Steps: {steps} - Falls: {drop_passsenger_pick_ghost}, Deliveries: {delivered_passenger}")

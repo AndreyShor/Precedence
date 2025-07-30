@@ -1,0 +1,219 @@
+---
+title: "precedence_sim"
+author: "Andrejs Sorstkins"
+date: "2025-07-30"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown for Algorithm Analysis
+
+Libraries
+```{r}
+
+required_pkgs <- c("tidyverse", "gridExtra", "psych", "zoo")
+for (pkg in required_pkgs) {
+  if (! requireNamespace(pkg, quietly=TRUE)) {
+    install.packages(pkg)
+  }
+  library(pkg, character.only=TRUE)
+}
+
+library(dplyr)
+library(ggplot2)
+library(reshape2)
+library(corrplot)
+
+library(patchwork)
+library(viridis) 
+
+
+```
+
+Load Data and Combine into one Data Frame (Sim 1)
+
+```{r pressure, echo=FALSE}
+setwd("/Users/andrejs.sorstkins/Documents/Research Project/Data")
+
+make_density_plot <- function(df, title_text, bins = 50) {
+  ggplot(df, aes(x = Rollbacks, y = TotalReward)) +
+    stat_bin2d(bins = bins) +
+    scale_fill_viridis_c(option = "viridis") +
+    labs(
+      title = title_text,
+      x     = "Steps",
+      y     = "Total Reward",
+      fill  = "Count"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(size = 14, face = "bold"),
+      axis.title = element_text(size = 12)
+    )
+}
+
+# Define the summary function
+summarize_with_ci <- function(df, metrics, conf_level = 0.95) {
+  # Number of observations
+  n <- nrow(df)
+  # Z-score for two-sided interval
+  alpha <- 1 - conf_level
+  z <- qnorm(1 - alpha/2)
+  
+  df %>%
+    summarise(across(
+      all_of(metrics),
+      list(mean = ~mean(.x, na.rm = TRUE),
+           sd   = ~sd(.x, na.rm = TRUE)),
+      .names = "{col}_{fn}"
+    )) %>%
+    pivot_longer(
+      everything(),
+      names_to = c("metric", ".value"),
+      names_sep = "_"
+    ) %>%
+    mutate(
+      se       = sd / sqrt(n),
+      ci_lower = mean - z * se,
+      ci_upper = mean + z * se
+    ) %>%
+    select(metric, mean, ci_lower, ci_upper)
+}
+
+# Load data
+qLearning_std_taxi  <- read.csv("./taxi_sim_Q_Agent.csv")
+qLearning_rev_taxi  <- read.csv("./taxi_sim_Q_Agent_MOD.csv")
+
+qLearning_std_Cliff  <- read.csv("./CliffWalking_sim_Q_Agent.csv")
+qLearning_rev_Cliff  <- read.csv("./CliffWalking_sim_Q_Agent_MOD.csv")
+
+# Add identifying cols for Taxi Sim
+
+metricsTaxi_Q <- c("Episode", 
+             "TotalReward", 
+             "Steps", 
+             "Drop", 
+             "Delivered")
+
+metricsTaxi_Mod <- c("Episode", 
+             "TotalReward", 
+             "Steps", 
+             "Drop", 
+             "Delivered",
+             "Rollbacks")
+
+# Change name in qLearning_std_taxi
+
+metricsCliff_Q <- c("Episode", 
+             "TotalReward", 
+             "Steps", 
+             "Falls")
+
+metricsCliff_MOD <- c("Episode", 
+             "TotalReward", 
+             "Steps", 
+             "Falls",
+             "Rollbacks")
+
+
+
+
+```
+
+```{r pressure, echo=FALSE}
+
+View(qLearning_std_Cliff)
+
+```
+
+
+## Basic EDA - Compute mean & 95% CI
+
+### Taxi Sim Q _ learning 
+
+```{r }
+
+summary_df <- summarize_with_ci(qLearning_std_taxi, metricsTaxi_Q)
+
+summary_df
+
+
+```
+### Taxi Sim Q Mod learning - Precedence + Reversiility
+
+```{r }
+
+summary_df <- summarize_with_ci(qLearning_rev_taxi, metricsTaxi_Mod)
+
+summary_df
+
+
+```
+### Cliff Walking Sim Q learning
+
+```{r }
+
+summary_df <- summarize_with_ci(qLearning_std_Cliff, metricsCliff_Q)
+
+summary_df
+
+
+```
+### Cliff Walking Sim Q learning
+
+```{r }
+
+summary_df <- summarize_with_ci(qLearning_rev_Cliff, metricsCliff_MOD)
+
+summary_df
+
+
+```
+
+```{r}
+
+p1 <- make_density_plot(qLearning_std_Cliff,  "Cliff, Q Learning")
+p2 <- make_density_plot(qLearning_rev_Cliff,   "Cliff,  Q Learning MOD")
+p3 <- make_density_plot(qLearning_std_taxi, "Taxi, Q Learning")
+p4 <- make_density_plot(qLearning_rev_taxi,   "Taxi, Q Learning MOD")
+
+
+# 3. Combine them into a 2×2 grid
+combined_plot <- (p1 | p2) /
+                 (p3 | p4) +
+  plot_annotation(
+    title = "2D Density of Steps vs Total Reward\nAcross Four Settings",
+    theme = theme(
+      plot.title = element_text(size = 16, face = "bold", hjust = 0.5)
+    )
+  )
+
+# 4. Display
+print(combined_plot)
+
+ggsave(
+  filename = "combined_plot.png",
+  plot     = combined_plot
+)
+
+```
+
+## 2D density heatmap: steps vs total_reward
+
+```{r density_heatmap}
+
+ggplot(qLearning_std_Cliff, aes(x = Steps, y = TotalReward)) +
+  stat_bin2d(bins = 50) +
+  scale_fill_viridis_c(option = "viridis") +
+  labs(
+    title = "2D Density of Steps vs Total Reward",
+    x = "Steps",
+    y = "Total Reward",
+    fill = "Count"
+  ) +
+  theme_minimal()
+
+```

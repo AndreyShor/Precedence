@@ -7,6 +7,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from Algorithm.Brain import ModifiedQLearningAgent
+from logger import loggerCSV
 
 # Initialize the environment
 env = gym.make("Taxi-v3")
@@ -28,6 +29,7 @@ episode_drops = []  # Number of drops or pickups of ghost passengers
 episode_rollbacks = []  # Number of rollbacks
 
 agent = ModifiedQLearningAgent(n_actions=env.action_space.n, n_states=env.observation_space.n, q_table_init=-1.0, threshold=3, penalty=1.2, K=20) # type: ignore
+logger = loggerCSV("taxi_sim_Q_Agent_MOD.csv", "taxi_mod")
 
 # Training loop
 for episode in range(episodes):
@@ -51,19 +53,18 @@ for episode in range(episodes):
         # Take the action and observe the next state, reward, and termination
         next_state, rollback_flag =  agent.update(state, action, reward, next_state, done)
 
+        if reward == -10 and rollback_flag == False:  # If the agent falls off the cliff
+            drop_passsenger_pick_ghost += 1
+
+        if reward == 20:  
+            delivered_passenger += 1
+
         # Accumulate total reward and step count
         if rollback_flag:
             total_reward += 0 # No reward on rollback
             number_rollbacks += 1
         else:
             total_reward += float(reward)
-
-
-        if reward == -10 and rollback_flag == False:  # If the agent falls off the cliff
-            drop_passsenger_pick_ghost += 1
-
-        if reward == 20:  
-            delivered_passenger += 1
 
         # Accumulate total reward and step count
         steps += 1
@@ -82,6 +83,7 @@ for episode in range(episodes):
     episode_deliveries.append(delivered_passenger)
     episode_rollbacks.append(number_rollbacks)
     
+    logger.log_taxi_Mod(episode, total_reward, steps, drop_passsenger_pick_ghost, delivered_passenger, number_rollbacks)
     # Optionally print stats after every 100 episodes for feedback
     if episode % 10000 == 0:
         print(f"Episode {episode} - Total Reward: {total_reward} - Steps: {steps} - Falls: {drop_passsenger_pick_ghost}, Deliveries: {delivered_passenger}")

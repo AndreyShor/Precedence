@@ -88,7 +88,7 @@ class QLearningReversableAgent:
     def reset(self):
         """Reset the Q-table to zero."""
         self.q_table.fill(-1.0)
-
+ 
 # SARSA Agent (on-policy TD control)
 class SarsaAgent:
     def __init__(self, n_states, n_actions, alpha=0.1, gamma=0.99, epsilon=0.1):
