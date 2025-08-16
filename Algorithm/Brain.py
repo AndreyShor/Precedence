@@ -1,4 +1,4 @@
-import numpy as np
+import numpy as np # type: ignore
 import random
 
 
@@ -241,4 +241,117 @@ class ModifiedQLearningAgent:
         # Clear any pending records
         self.precedence_buffer.clear()
         # Reset the global step counter
+        self.time_step = 0
+
+
+
+class ModifiedSARSAAgent:
+    """
+    SARSA agent with a rollback mechanism and precedence (Φ) estimates.
+    - Maintains a reversibility table Φ[s,a] that estimates the probability of returning to state s after taking action a within K steps.
+    - Uses a FIFO buffer of recent transitions (length K) to update Φ via an exponential moving average.
+    - Computes a penalized reward r' = r – λ * (1 – Φ[s,a]) to downweight bad transitions.
+    - Applies a penalty factor β if the TD target falls below a threshold T of the current Q-value.
+    - If such a “heavy mistake” is detected, performs a rollback: the next state is reset to the current state (undo the transition).
+    """
+    def __init__(self, n_states, n_actions, q_table_init=1, alpha=0.1, gamma=0.99, epsilon=0.1,
+                 K=10, alpha_phi=0.01, lambda_precedence=1.0, phi_init=0.5,
+                 threshold=0.8, penalty=1.2):
+        # Q-value table and Φ table (initialize Φ values optimistically at phi_init)
+        self.q_table_init = q_table_init
+        self.q_table = np.full((n_states, n_actions), q_table_init, dtype=float)
+
+        self.phi      = np.full((n_states, n_actions), phi_init, dtype=np.float32)
+        self.phi_init = phi_init
+
+        # Learning parameters
+        self.alpha = alpha
+        self.gamma = gamma
+        self.epsilon = epsilon
+
+        # Precedence (reversibility) parameters
+        self.K = K                          # horizon for tracking reversibility (FIFO length)
+        self.alpha_phi = alpha_phi          # learning rate for Φ updates
+        self.lambda_precedence = lambda_precedence  # λ coefficient for reward penalty
+
+        # Rollback mechanism parameters
+        self.threshold = threshold          # T: threshold fraction of Q to trigger penalty
+        self.penalty = penalty              # β: penalty factor for updates when triggered
+
+        # FIFO buffer to track recent transitions for Φ updates
+        # Each entry: {'s0': state, 'a0': action, 'deadline': time_step + K}
+        self.precedence_buffer = []
+        self.time_step = 0
+
+    def select_action(self, state):
+        """Epsilon-greedy action selection."""
+        if random.random() < self.epsilon:
+            return random.randrange(self.q_table.shape[1])
+        else:
+            return int(np.argmax(self.q_table[state]))
+
+    def update(self, state, action, reward, next_state, next_action, done):
+        """
+        SARSA update for a single transition with Φ/penalty/rollback.
+        Returns (effective_next_state, rollback_flag).
+        NOTE: next_action should be the action actually chosen in next_state under the current policy.
+        """
+        self.time_step += 1
+
+        # 1) Update Φ for any pending transitions whose window finished
+        finished_records = []
+        for rec in self.precedence_buffer:
+            s0, a0, deadline = rec['s0'], rec['a0'], rec['deadline']
+            if next_state == s0:
+                y = 1  # returned to s0 within K steps
+            elif self.time_step > deadline:
+                y = 0  # timed out
+            else:
+                continue
+            self.phi[s0, a0] = (1 - self.alpha_phi) * self.phi[s0, a0] + self.alpha_phi * y
+            finished_records.append(rec)
+        for rec in finished_records:
+            self.precedence_buffer.remove(rec)
+
+        # 2) Enqueue the current (s,a) with deadline
+        self.precedence_buffer.append({
+            's0': state, 'a0': action, 'deadline': self.time_step + self.K
+        })
+
+        # 3) Penalized reward r' using Φ
+        phi_val = self.phi[state, action]
+        r_prime = reward - self.lambda_precedence * (1.0 - phi_val)
+
+        # 4) SARSA TD target using the actually chosen next_action
+        if done:
+            next_q = 0.0
+        else:
+            next_q = self.q_table[next_state, next_action]
+
+        target = r_prime + self.gamma * next_q
+        current_q = self.q_table[state, action]
+        td_error = target - current_q
+
+        # 5) Threshold penalty & rollback flag
+        if target <= self.threshold * current_q:
+            beta = self.penalty
+            rollback_flag = True
+        else:
+            beta = 1.0
+            rollback_flag = False
+
+        # 6) Update Q(s,a)
+        self.q_table[state, action] += self.alpha * beta * td_error
+
+        # 7) Rollback: if triggered and episode not done, stay in the same state
+        if rollback_flag and not done:
+            return state, rollback_flag
+        else:
+            return next_state, rollback_flag
+
+    def reset(self):
+        """Reset Q-table, Φ-table, buffer, and timestep."""
+        self.q_table.fill(self.q_table_init)
+        self.phi.fill(self.phi_init)
+        self.precedence_buffer.clear()
         self.time_step = 0
