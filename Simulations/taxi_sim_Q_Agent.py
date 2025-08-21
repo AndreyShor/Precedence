@@ -29,6 +29,7 @@ agent = QLearningAgent(n_actions=env.action_space.n, n_states=env.observation_sp
 logger = loggerCSV("taxi_sim_Q_Agent.csv", "taxi")
 # Training loop
 for episode in range(episodes):
+    agent.reset()  # Reset agent's Q-table for each episodesim
     state, info = env.reset(seed=seeds[episode])  # Reset environment for each episod
     done = False
     total_reward = 0.0

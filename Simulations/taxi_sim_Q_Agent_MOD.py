@@ -33,6 +33,7 @@ logger = loggerCSV("taxi_sim_Q_Agent_MOD.csv", "taxi_mod")
 
 # Training loop
 for episode in range(episodes):
+    agent.reset()  # Reset agent's Q-table for each episodesim
     state, info = env.reset(seed=seeds[episode])  # Reset environment for each episod
     done = False
     total_reward = 0.0
