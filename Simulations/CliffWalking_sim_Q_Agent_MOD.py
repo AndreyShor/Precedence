@@ -14,7 +14,7 @@ env = gym.make("CliffWalking-v0")
 # Initialize Q-learning agent
 
 # Parameters for Q-learning
-episodes = 100000  # Number of episodes
+episodes = 1000  # Number of episodes
 max_steps = 400  # Max steps per episode
 
 seeds = list(range(episodes)) 
@@ -74,7 +74,7 @@ for episode in range(episodes):
     episode_rollbacks.append(number_rollbacks)
     logger.log_cliff_Mod(episode, total_reward, steps, number_falls, number_rollbacks)
     # Optionally print stats after every 100 episodes for feedback
-    if episode % 1000 == 0:
+    if episode % 10 == 0:
         print(f"Episode {episode} - Total Reward: {total_reward} - Steps: {steps} - Falls: {number_falls}, Rollbacks: {number_rollbacks}")
 
 # After training, calculate some statistics

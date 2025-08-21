@@ -223,7 +223,7 @@ class DoubleQLearningAgent:
         return self._argmax_uniform(q_sum)
 
 
-    def update(self, state: int, action: int, reward: float, next_state: int, done: bool) -> int:
+    def update(self, state, action, reward, next_state, done: bool) -> int:
         """
         Perform one Double Q-learning update using transition (s, a, r, s', done).
         Returns next_state for drop-in loop compatibility.

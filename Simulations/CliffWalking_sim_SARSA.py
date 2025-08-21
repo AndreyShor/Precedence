@@ -7,7 +7,7 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from Algorithm.Brain import QLearningAgent
+from Algorithm.Brain import SarsaAgent
 from logger import loggerCSV
 
 # Initialize the environment
@@ -26,42 +26,51 @@ episode_rewards = []  # Total reward for each episode
 episode_lengths = []  # Length (number of steps) per episode
 episode_falls = []  # Number of falls off the cliff per episode
 
-agent = QLearningAgent(n_actions=env.action_space.n, n_states=env.observation_space.n) # type: ignore
-logger = loggerCSV("CliffWalking_sim_Q_Agent.csv", "cliff")
+agent = SarsaAgent(n_actions=env.action_space.n, n_states=env.observation_space.n) # type: ignore
+logger = loggerCSV("CliffWalking_sim_SARSA.csv", "cliff")
 # Training loop
-for episode in range(episodes): # Reset agent's Q-table for each episode
+for episode in range(episodes):  # Reset agent's Q-table for each episode
     agent.reset()  # Reset agent's Q-table for each episode
     state, info = env.reset(seed=seeds[episode])  # Reset environment for each episod
     done = False
     total_reward = 0.0
     steps = 0
     number_falls = 0  # Count of falls off the cliff
-    
-    # Run the episode
+
+    # Choose initial action using the current policy (SARSA is on-policy)
+    action = agent.select_action(state)
+
+    total_reward = 0.0
+    steps = 0
+    number_falls = 0
+
     for _ in range(max_steps):
-        # Choose action from the current state
-        action = agent.select_action(state)
-        
-        # Take the action and observe the next state, reward, and termination
-        next_state, reward, done, truncated, info = env.step(action)
+        next_state, reward, terminated, truncated, info = env.step(action)
+        done = bool(terminated or truncated)
 
-
-        if reward == -100:  # If the agent falls off the cliff
+        if reward == -100:
             number_falls += 1
-        # Update Q-table with the agent's experience (It will also return the next state), the same as from env
 
-        next_state = agent.update(state, action, reward, next_state, done)
-        
-        # Accumulate total reward and step count
+        # Choose the next action from next_state (on-policy)
+        if not done:
+            next_action = agent.select_action(next_state)
+        else:
+            next_action = None  # not used in update when done=True
+
+        # Standard SARSA update uses the actual next_action’s Q-value
+        agent.update(state, action, reward, next_state,
+                     next_action if next_action is not None else 0,
+                     done)
+
         total_reward += float(reward)
         steps += 1
-        
-        # Move to the next state
-        state = next_state
-        
-        # If done (agent reaches the goal
+
         if done:
             break
+
+        # Move forward: (s, a) <- (s', a')
+        state = next_state
+        action = next_action
     
     # Collect statistics after each episode
     episode_rewards.append(total_reward)

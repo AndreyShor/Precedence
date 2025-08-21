@@ -15,7 +15,7 @@ env = gym.make("Taxi-v3")
 # Initialize Q-learning agent
 
 # Parameters for Q-learning
-episodes = 100000  # Number of episodes
+episodes = 1000  # Number of episodes
 max_steps = 1000  # Max steps per episode
 
 seeds = list(range(episodes)) 
@@ -33,7 +33,6 @@ logger = loggerCSV("taxi_sim_Q_Agent_MOD.csv", "taxi_mod")
 
 # Training loop
 for episode in range(episodes):
-    agent.reset()  # Reset agent's Q-table for each episode
     state, info = env.reset(seed=seeds[episode])  # Reset environment for each episod
     done = False
     total_reward = 0.0
@@ -85,7 +84,7 @@ for episode in range(episodes):
     
     logger.log_taxi_Mod(episode, total_reward, steps, drop_passsenger_pick_ghost, delivered_passenger, number_rollbacks)
     # Optionally print stats after every 100 episodes for feedback
-    if episode % 10000 == 0:
+    if episode % 100 == 0:
         print(f"Episode {episode} - Total Reward: {total_reward} - Steps: {steps} - Falls: {drop_passsenger_pick_ghost}, Deliveries: {delivered_passenger}")
 
 # After training, calculate some statistics
