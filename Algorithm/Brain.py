@@ -1,5 +1,6 @@
 import numpy as np # type: ignore
 import random
+from typing import Optional
 
 
 # Q-Learning Agent (off-policy TD control)
@@ -120,6 +121,156 @@ class SarsaAgent:
     def reset(self):
         """Reset the Q-table to zero."""
         self.q_table.fill(0.0)
+
+class ExpectedSarsaAgent:
+    def __init__(self, n_states, n_actions, alpha=0.1, gamma=0.99, epsilon=0.1, init_value=-1.0):
+        """Initialize Q-table and learning parameters."""
+        self.q_table = np.full((n_states, n_actions), fill_value=init_value, dtype=np.float32)
+        self.alpha = alpha
+        self.gamma = gamma
+        self.epsilon = epsilon
+        self.n_actions = n_actions
+
+    def select_action(self, state):
+        """Epsilon-greedy action selection (same as your SARSA/QLearning)."""
+        if random.random() < self.epsilon:
+            return random.randrange(self.n_actions)
+        return int(np.argmax(self.q_table[state]))
+
+    def _expected_q(self, next_state):
+        """
+        Compute E_a'[Q(s',a')] under the ε-greedy policy:
+          P(a*=argmax)=1-ε+ε/|A|,  P(other)=ε/|A|
+        """
+        q_next = self.q_table[next_state]  # shape: (n_actions,)
+        best_a = int(np.argmax(q_next))
+
+        # Start with uniform ε/|A| over all actions, then add (1-ε) to best action
+        pi = np.full(self.n_actions, self.epsilon / self.n_actions, dtype=np.float32)
+        pi[best_a] += (1.0 - self.epsilon)
+
+        # Expected value under π
+        return float(np.dot(pi, q_next))
+
+    def update(self, state, action, reward, next_state, next_action_unused, done):
+        """
+        Expected SARSA update:
+          target = r + γ * E_{a'~π}[ Q(s',a') ]  (if not done), else r
+          Q(s,a) ← Q(s,a) + α [target − Q(s,a)]
+        Note: next_action is unused (kept in signature for drop-in compatibility).
+        """
+        if done:
+            target = reward
+        else:
+            target = reward + self.gamma * self._expected_q(next_state)
+
+        td_error = target - self.q_table[state, action]
+        self.q_table[state, action] += self.alpha * td_error
+        return next_state  # keep the same return as your SARSA agent
+
+    def reset(self):
+        """Reset the Q-table to zero (matches your SARSA.reset behavior)."""
+        self.q_table.fill(0.0)
+
+
+class DoubleQLearningAgent:
+    """
+    Tabular Double Q-Learning (Hasselt, 2010).
+
+    - Maintains two Q-tables: Q_A and Q_B.
+    - On each step, updates exactly one table:
+        * If updating Q_A: choose a* = argmax_a Q_A(s',a), then evaluate using Q_B(s', a*).
+        * If updating Q_B: choose b* = argmax_a Q_B(s',a), then evaluate using Q_A(s', b*).
+    - Control uses ε-greedy over the *combined* estimate: Q_A + Q_B.
+    """
+
+    def __init__(
+        self,
+        n_states: int,
+        n_actions: int,
+        alpha: float = 0.1,
+        gamma: float = 0.99,
+        epsilon: float = 0.1,
+        init_value: float = 0.0,
+        update_mode: str = "random",   # "random" or "alternate"
+        seed: Optional[int] = None,
+    ) -> None:
+        # Hyperparameters
+        self.n_actions = int(n_actions)
+        self.alpha = float(alpha)
+        self.gamma = float(gamma)
+        self.epsilon = float(epsilon)
+        self.init_value = float(init_value)
+
+        # Update scheduling
+        assert update_mode in {"random", "alternate"}
+        self.update_mode = update_mode
+        self._alternate_flag = False  # toggled if update_mode == "alternate"
+
+        # PRNG (single source for reproducibility)
+        self.rng = np.random.default_rng(seed)
+
+        # Q-tables
+        self.q_a = np.full((n_states, n_actions), self.init_value, dtype=np.float32)
+        self.q_b = np.full((n_states, n_actions), self.init_value, dtype=np.float32)
+
+
+    def select_action(self, state: int) -> int:
+        """ε-greedy over (Q_A + Q_B)."""
+        if self.rng.random() < self.epsilon:
+            return int(self.rng.integers(self.n_actions))
+        q_sum = self.q_a[state] + self.q_b[state]
+        return self._argmax_uniform(q_sum)
+
+
+    def update(self, state: int, action: int, reward: float, next_state: int, done: bool) -> int:
+        """
+        Perform one Double Q-learning update using transition (s, a, r, s', done).
+        Returns next_state for drop-in loop compatibility.
+        """
+        which = self._choose_table_to_update()
+
+        if which == "A":
+            # Select via Q_A, evaluate via Q_B
+            target = reward
+            if not done:
+                a_star = self._argmax_uniform(self.q_a[next_state])
+                target += self.gamma * float(self.q_b[next_state, a_star])
+            td = target - float(self.q_a[state, action])
+            self.q_a[state, action] += self.alpha * td
+
+        else:  # which == "B"
+            # Select via Q_B, evaluate via Q_A
+            target = reward
+            if not done:
+                b_star = self._argmax_uniform(self.q_b[next_state])
+                target += self.gamma * float(self.q_a[next_state, b_star])
+            td = target - float(self.q_b[state, action])
+            self.q_b[state, action] += self.alpha * td
+
+        return next_state
+    
+    def _argmax_uniform(self, values: np.ndarray) -> int:
+        """Argmax with *uniform* tie-breaking."""
+        max_val = values.max()
+        ties = np.flatnonzero(values == max_val)
+        return int(self.rng.choice(ties))
+
+    def _choose_table_to_update(self) -> str:
+        """Return 'A' or 'B' per update_mode."""
+        if self.update_mode == "alternate":
+            self._alternate_flag = not self._alternate_flag
+            return "A" if self._alternate_flag else "B"
+        return "A" if self.rng.random() < 0.5 else "B"
+
+    def reset(self, to_value: Optional[float] = None) -> None:
+        """
+        Reset both Q-tables. If to_value is None, uses init_value.
+        """
+        val = self.init_value if to_value is None else float(to_value)
+        self.q_a.fill(val)
+        self.q_b.fill(val)
+
 
 # Modified Q-Learning Agent with Rollback and Precedence
 class ModifiedQLearningAgent:
@@ -244,7 +395,6 @@ class ModifiedQLearningAgent:
         self.time_step = 0
 
 
-
 class ModifiedSARSAAgent:
     """
     SARSA agent with a rollback mechanism and precedence (Φ) estimates.
@@ -275,7 +425,7 @@ class ModifiedSARSAAgent:
         self.lambda_precedence = lambda_precedence  # λ coefficient for reward penalty
 
         # Rollback mechanism parameters
-        self.threshold = threshold          # T: threshold fraction of Q to trigger penalty
+        self.threshold = threshold          # T: thresh old fraction of Q to trigger penalty
         self.penalty = penalty              # β: penalty factor for updates when triggered
 
         # FIFO buffer to track recent transitions for Φ updates
