@@ -45,7 +45,6 @@ for episode in range(episodes): # Reset agent's Q-table for each episode
         # Take the action and observe the next state, reward, and termination
         next_state, reward, done, truncated, info = env.step(action)
 
-
         if reward == -100:  # If the agent falls off the cliff
             number_falls += 1
         # Update Q-table with the agent's experience (It will also return the next state), the same as from env
