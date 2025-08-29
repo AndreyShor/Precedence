@@ -68,16 +68,16 @@ Choose the mode that matches your experimental goal. Do not delete the method fr
 ## Implemented and in-progress algorithms
 
 Implemented and ready for testing:
-- Q-Learning
-- SARSA
-- Expected SARSA
-- Double Q-Learning
-- Q-Learning modified with Rollback only
-- Q-Learning modified with Rollback + Precedence
+- Q-Learning - QLearningAgent
+- SARSA - SarsaAgent
+- Expected SARSA - ExpectedSarsaAgent
+- Double Q-Learning - DoubleQLearningAgent
+- Q-Learning modified with Rollback only - QLearningReversableAgent
+- Q-Learning modified with Rollback + Precedence - ModifiedQLearningAgent
 
 In progress:
 - SARSA modified with Rollback only — nearly done, but I suspect there is a bug somewhere.
-- SARSA modified with Rollback + Precedence — nearly there.
+- SARSA modified with Rollback + Precedence — nearly there. - ModifiedSARSAAgent
 
 ## Using and extending algorithms
 
