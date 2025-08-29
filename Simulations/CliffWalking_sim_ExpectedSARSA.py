@@ -27,7 +27,7 @@ episode_lengths = []  # Length (number of steps) per episode
 episode_falls = []  # Number of falls off the cliff per episode
 
 agent = ExpectedSarsaAgent(n_actions=env.action_space.n, n_states=env.observation_space.n) # type: ignore
-logger = loggerCSV("CliffWalking_sim_SARSA.csv", "cliff")
+logger = loggerCSV("CliffWalking_sim_Expected_SARSA.csv", "cliff")
 # Training loop
 for episode in range(episodes):# Reset agent's Q-table for each episode
     agent.reset()  # Reset agent's Q-table for each episode
