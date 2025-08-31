@@ -128,9 +128,7 @@ Use these helpers in your simulations to capture episode returns, step counts, a
 
 ## License
 
-
 ## Citation
-
 
 ## Questions or issues
 

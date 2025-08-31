@@ -40,10 +40,6 @@ for episode in range(episodes):  # Reset agent's Q-table for each episode
     # Choose initial action using the current policy (SARSA is on-policy)
     action = agent.select_action(state)
 
-    total_reward = 0.0
-    steps = 0
-    number_falls = 0
-
     for _ in range(max_steps):
         next_state, reward, terminated, truncated, info = env.step(action)
         done = bool(terminated or truncated)
