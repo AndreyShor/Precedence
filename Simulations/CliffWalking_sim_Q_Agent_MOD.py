@@ -6,7 +6,7 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from Algorithm.Brain import ModifiedQLearningAgent, QLearningReversableAgent
+from Algorithm.Brain import ModifiedQLearningAgent, FullAgent
 from logger import loggerCSV
 # Initialize the environment
 env = gym.make("CliffWalking-v0")
@@ -26,7 +26,7 @@ episode_falls = []  # Number of falls off the cliff per episode
 episode_rollbacks = []  # Number of rollbacks per episode
 
 # agent = QLearningReversableAgent(n_actions=env.action_space.n, n_states=env.observation_space.n, revers_penaltyLimit = 80) # type: ignore
-agent = ModifiedQLearningAgent(n_actions=env.action_space.n, n_states=env.observation_space.n, q_table_init=-1.0, threshold=3, penalty=1.4, K=10) # type: ignore
+agent = FullAgent(n_actions=env.action_space.n, n_states=env.observation_space.n, q_table_init=-1.0, alpha_phi=0.01, lambda_precedence=1.0, phi_init=0.5, threshold=3, penalty=1.4, K=10) # type: ignore
 logger = loggerCSV("CliffWalking_sim_Q_Agent_MOD.csv", "cliff_mod")
 # Training loop
 for episode in range(episodes):

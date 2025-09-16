@@ -6,7 +6,7 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from Algorithm.Brain import ModifiedQLearningAgent
+from Algorithm.Brain import FullAgent
 from logger import loggerCSV
 
 # Initialize the environment
@@ -28,7 +28,7 @@ episode_drops = []  # Number of drops or pickups of ghost passengers
 
 episode_rollbacks = []  # Number of rollbacks
 
-agent = ModifiedQLearningAgent(n_actions=env.action_space.n, n_states=env.observation_space.n, q_table_init=-1.0, threshold=3, penalty=1.2, K=20) # type: ignore
+agent = FullAgent(n_actions=env.action_space.n, n_states=env.observation_space.n, q_table_init=-1.0, alpha_phi=0.01, lambda_precedence=1.0, phi_init=0.5, threshold=3, penalty=1.4, K=10) # type: ignore
 logger = loggerCSV("taxi_sim_Q_Agent_MOD.csv", "taxi_mod")
 
 # Training loop
