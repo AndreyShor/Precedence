@@ -43,7 +43,8 @@ class PrecedenceAgent:
                  K=10, alpha_phi=0.01, q_table_init=-1.0, lambda_precedence=1.0, phi_init=0.5):
         self.q_table = np.full((n_states, n_actions), q_table_init, dtype=np.float32)
         self.phi = np.full((n_states, n_actions), phi_init, dtype=np.float32)
-        self.q_table_init = q_table_init,
+        # Fixed: remove trailing comma so these are scalars, not 1-tuples
+        self.q_table_init = q_table_init
         self.phi_init = phi_init
         self.alpha = alpha
         self.gamma = gamma
@@ -51,7 +52,6 @@ class PrecedenceAgent:
         self.K = K
         self.alpha_phi = alpha_phi
         self.lambda_precedence = lambda_precedence
-        self.phi_init = phi_init
         self.precedence_buffer = []
         self.time_step = 0
     
@@ -96,6 +96,7 @@ class PrecedenceAgent:
         return next_state, False  # No rollback
     
     def reset(self):
+        # fill expects scalars — q_table_init / phi_init are now scalars
         self.q_table.fill(self.q_table_init)
         self.phi.fill(self.phi_init)
         self.precedence_buffer.clear()

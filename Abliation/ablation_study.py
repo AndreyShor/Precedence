@@ -32,11 +32,11 @@ def run_exact_experiment(env_name, agent_class, agent_params, agent_name, episod
     
     # Match existing parameter settings
     if env_name == "CliffWalking-v0":
-        max_steps = 400
+        max_steps = 700
         failure_reward = -100  # Falls off cliff
         success_reward = None
     else:  # Taxi-v3
-        max_steps = 1000
+        max_steps = 1500
         failure_reward = -10   # Illegal pickup/dropoff
         success_reward = 20    # Successful delivery
     
@@ -78,6 +78,7 @@ def run_exact_experiment(env_name, agent_class, agent_params, agent_name, episod
         failures = 0
         successes = 0
         rollbacks = 0
+        doneStatus = False
         
         # Episode loop (match existing max_steps pattern)
         for _ in range(max_steps):
@@ -117,8 +118,9 @@ def run_exact_experiment(env_name, agent_class, agent_params, agent_name, episod
             
             steps += 1
             state = next_state
-            
+
             if done:
+                doneStatus = True
                 break
         
         # Collect statistics
@@ -131,15 +133,15 @@ def run_exact_experiment(env_name, agent_class, agent_params, agent_name, episod
         # Log with exact same pattern as existing sims
         if has_rollback:
             if env_name == "CliffWalking-v0":
-                logger.log_cliff_Mod(episode, total_reward, steps, failures, rollbacks)
+                logger.log_cliff_Mod(episode, total_reward, steps, failures, rollbacks, doneStatus)
             else:
-                logger.log_taxi_Mod(episode, total_reward, steps, failures, successes, rollbacks)
+                logger.log_taxi_Mod(episode, total_reward, steps, failures, successes, rollbacks, doneStatus)
         else:
             if env_name == "CliffWalking-v0":
-                logger.log_cliff(episode, total_reward, steps, failures)
+                logger.log_cliff(episode, total_reward, steps, failures, doneStatus)
             else:
-                logger.log_taxi(episode, total_reward, steps, failures, successes)
-        
+                logger.log_taxi(episode, total_reward, steps, failures, successes, doneStatus)
+
         # Progress updates (match existing pattern)
         if episode % 100 == 0:
             print(f"  Episode {episode}: Reward={total_reward:.1f}, Steps={steps}, Failures={failures}, Rollbacks={rollbacks}")
@@ -173,7 +175,222 @@ def run_corrected_ablation_study(episodes=1000):
     # Define ablation configurations using EXACT parameters from existing sims
     ablation_configs = {
         # Environment: CliffWalking-v0
+
+        'CliffWalking-v0_Full_penalty': {
+            'ENV': 'CliffWalking-v0',   
+            'Baseline': {
+                'class': QLearningAgent,
+                'params': {}  # Uses default initialization (zeros after reset)
+            },
+            'FullModel_P_1_1': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 10}  # EXACT existing params
+            },
+
+            'FullModel_P_1_2': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.3, 'threshold': 3, 'K': 10}  # EXACT existing params
+            },
+
+            'FullModel_P_1_4': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.5, 'threshold': 3, 'K': 10}  # EXACT existing params
+            },
+
+            'FullModel_P_1_6': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.7, 'threshold': 3, 'K': 10}  # EXACT existing params
+            }
+        },
+
+        'CliffWalking-v0_Full_K': {
+            'ENV': 'CliffWalking-v0',
+            'Baseline': {
+                'class': QLearningAgent,
+                'params': {}  # Uses default initialization (zeros after reset)
+            },
+
+            'FullModel_K_0': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 0}  # EXACT existing params
+            },
+
+            'FullModel_K_2': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 2}  # EXACT existing params
+            },
+
+            'FullModel_K_4': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_K_6': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 6}  # EXACT existing params
+            },
+
+            'FullModel_K_8': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 8}  # EXACT existing params
+            }
+        },
+
+        'CliffWalking-v0_Full_Threshold': {
+            'ENV': 'CliffWalking-v0',
+            'Baseline': {
+                'class': QLearningAgent,
+                'params': {}  # Uses default initialization (zeros after reset)
+            },
+
+            'FullModel_Threshold_1_2': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 1.2, 'K': 2}  # EXACT existing params
+            },
+
+            'FullModel_Threshold_1_5': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 1.5, 'K': 2}  # EXACT existing params
+            },
+
+            'FullModel_Threshold_2': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 2, 'K': 2}  # EXACT existing params
+            },
+
+            'FullModel_Threshold_3': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 2}  # EXACT existing params
+            },
+
+            'FullModel_Threshold_4': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 4, 'K': 2}  # EXACT existing params
+            }
+        },
+
+        'CliffWalking-v0_phi': {
+            'ENV': 'CliffWalking-v0',
+            'Baseline': {
+                'class': QLearningAgent,
+                'params': {}  # Uses default initialization (zeros after reset)
+            },
+
+            'FullModel_phi_0': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.0, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_phi_0_1': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.1, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_phi_0_2': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.2, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_phi_0_3': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.3, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_phi_0_4': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.4, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_phi_0_5': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_phi_0_7': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.7, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_phi_0_8': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.8, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_phi_0_9': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.9, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+
+            'FullModel_phi_1_0': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 1.0, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            }
+
+        },
+        
+        'CliffWalking-v0_lambda': {
+            'ENV': 'CliffWalking-v0',
+            'Baseline': {
+                'class': QLearningAgent,
+                'params': {}  # Uses default initialization (zeros after reset)
+            },
+
+            'FullModel_lambda_1_0': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_lambda_0_9': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.9, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_lambda_0_8': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.8, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_lambda_0_7': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.7, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_lambda_0_6': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.6, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_lambda_0_5': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.5, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_lambda_0_4': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.4, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_lambda_0_3': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.3, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_lambda_0_2': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.2, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+
+            'FullModel_lambda_0_1': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.1, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            }
+
+        },
+
         'CliffWalking-v0': {
+            'ENV': 'CliffWalking-v0',
             'Baseline': {
                 'class': QLearningAgent,
                 'params': {}  # Uses default initialization (zeros after reset)
@@ -184,36 +401,254 @@ def run_corrected_ablation_study(episodes=1000):
             },
             'PrecedenceOnly': {
                 'class': PrecedenceAgent,
-                'params': {'q_table_init': -1.0, 'K': 10, 'alpha_phi': 0.01, 
-                          'lambda_precedence': 1.0, 'phi_init': 0.5}  # Phi only, no threshold
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.6, 'phi_init': 0.1, 'K': 2}  # Phi only, no threshold
             },
             'ThresholdPeAgent': {
                 'class': ThresholdPenaltyAgent,
-                'params': {'q_table_init': -1.0, 'threshold': 3, 'penalty': 1.4}  # Threshold only
+                'params': {'q_table_init': -1.0, 'threshold': 3, 'penalty': 1.1}  # Threshold only
             },
+
             'Roll_Threshold': {
                 'class': RollbackAndThresholdPenaltyAgent,
-                'params': {'q_table_init': -1.0, 'threshold': 3, 'penalty': 1.4}  # Threshold only
+                'params': {'q_table_init': -1.0, 'threshold': 3, 'penalty': 1.1}  # Threshold only
             },
 
             'Precedence_Th': {
                 'class': PrecedenceThresholdPenaltyAgent,
-                'params': {'q_table_init': -1.0,'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'threshold': 3, 'penalty': 1.4, 'K': 10}  # Threshold only
+                'params': {'q_table_init': -1.0,'alpha_phi': 0.01, 'lambda_precedence': 0.6, 'phi_init': 0.1, 'threshold': 3, 'penalty': 1.1, 'K': 2}  # Threshold only
             },
 
             'Precedence_R': {
                 'class': PrecedenceRollbackAgent,
-                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'threshold': 3, 'K': 10}  # Threshold only
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.6, 'phi_init': 0.1, 'threshold': 3, 'K': 2}  # Threshold only
             },
 
             'FullModel': {
                 'class': FullAgent,
-                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.4, 'K': 10}  # EXACT existing params
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.6, 'phi_init': 0.1, 'penalty': 1.1, 'threshold': 3, 'K': 2}  # EXACT existing params
             }
         },
         
         # Environment: Taxi-v3  
+
+
+        'Taxi-v3_Full_penalty': {
+            'ENV': 'Taxi-v3',
+            'Baseline': {
+                'class': QLearningAgent,
+                'params': {}  # Uses default initialization (zeros after reset)
+            },
+            'FullModel_P_1_1': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 2}  # EXACT existing params
+            },
+
+            'FullModel_P_1_2': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.3, 'threshold': 3, 'K': 2}  # EXACT existing params
+            },
+
+            'FullModel_P_1_4': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.4, 'threshold': 3, 'K': 2}  # EXACT existing params
+            },
+
+            'FullModel_P_1_6': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.7, 'threshold': 3, 'K': 2}  # EXACT existing params
+            }
+        },
+
+        'Taxi-v3_Full_K': {
+            'ENV': 'Taxi-v3',
+            'Baseline': {
+                'class': QLearningAgent,
+                'params': {}  # Uses default initialization (zeros after reset)
+            },
+
+            'FullModel_K_0': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 0}  # EXACT existing params
+            },
+
+            'FullModel_K_2': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 2}  # EXACT existing params
+            },
+
+            'FullModel_K_4': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_K_6': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 6}  # EXACT existing params
+            },
+
+            'FullModel_K_8': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 8}  # EXACT existing params
+            }
+        },
+
+        'Taxi-v3_Full_Threshold': {
+            'ENV': 'Taxi-v3',
+            'Baseline': {
+                'class': QLearningAgent,
+                'params': {}  # Uses default initialization (zeros after reset)
+            },
+
+            'FullModel_Threshold_1_2': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 1.2, 'K': 2}  # EXACT existing params
+            },
+
+            'FullModel_Threshold_1_5': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 1.5, 'K': 2}  # EXACT existing params
+            },
+
+            'FullModel_Threshold_2': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 2, 'K': 2}  # EXACT existing params
+            },
+
+            'FullModel_Threshold_3': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 2}  # EXACT existing params
+            },
+
+            'FullModel_Threshold_4': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 4, 'K': 2}  # EXACT existing params
+            }
+        },
+
+        'Taxi-v3_phi': {
+            'ENV': 'Taxi-v3',
+            'Baseline': {
+                'class': QLearningAgent,
+                'params': {}  # Uses default initialization (zeros after reset)
+            },
+
+            'FullModel_phi_0': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.0, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_phi_0_1':  {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.1, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_phi_0_2': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.2, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_phi_0_3': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.3, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_phi_0_4': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.4, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_phi_0_5': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_phi_0_6': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.6, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_phi_0_7': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.7, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+            'FullModel_phi_0_8': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.8, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+            'FullModel_phi_0_9': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.9, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_phi_1_0': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 1.0, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            }
+
+        },
+
+        'Taxi-v3_lambda': {
+            'ENV': 'Taxi-v3',
+            'Baseline': {
+                'class': QLearningAgent,
+                'params': {}  # Uses default initialization (zeros after reset)
+            },
+
+            'FullModel_lambda_1_0': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_lambda_0_9': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.9, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_lambda_0_8': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.8, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_lambda_0_7': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.7, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_lambda_0_6': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.6, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_lambda_0_5': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.5, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_lambda_0_4': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.4, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_lambda_0_3': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.3, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+            'FullModel_lambda_0_2': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.2, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            },
+
+
+            'FullModel_lambda_0_1': {
+                'class': FullAgent,
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.1, 'phi_init': 0.5, 'penalty': 1.1, 'threshold': 3, 'K': 4}  # EXACT existing params
+            }
+
+        },
+
         'Taxi-v3': {
+            'ENV': 'Taxi-v3',
             'Baseline': {
                 'class': QLearningAgent,
                 'params': {}  # Uses default initialization (zeros after reset)
@@ -224,34 +659,36 @@ def run_corrected_ablation_study(episodes=1000):
             },
             'PrecedenceOnly': {
                 'class': PrecedenceAgent,
-                'params': {'q_table_init': -1.0, 'K': 10, 'alpha_phi': 0.01, 
-                          'lambda_precedence': 1.0, 'phi_init': 0.5}  # Phi only, no threshold
+                'params': {'q_table_init': -1.0, 'K': 2, 'alpha_phi': 0.01, 
+                          'lambda_precedence': 0.8, 'phi_init': 0.8}  # Phi only, no threshold
             },
             'ThresholdPeAgent': {
                 'class': ThresholdPenaltyAgent,
-                'params': {'q_table_init': -1.0, 'threshold': 3, 'penalty': 1.4}  # Threshold only
+                'params': {'q_table_init': -1.0, 'threshold': 3, 'penalty': 1.1}  # Threshold only
             },
             'Roll_Threshold': {
                 'class': RollbackAndThresholdPenaltyAgent,
-                'params': {'q_table_init': -1.0, 'threshold': 3, 'penalty': 1.4}  # Threshold only
+                'params': {'q_table_init': -1.0, 'threshold': 3, 'penalty': 1.1}  # Threshold only
             },
 
             'Precedence_Th': {
                 'class': PrecedenceThresholdPenaltyAgent,
-                'params': {'q_table_init': -1.0,'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'threshold': 3, 'penalty': 1.4, 'K': 10}  # Threshold only
+                'params': {'q_table_init': -1.0,'alpha_phi': 0.01, 'lambda_precedence': 0.8, 'phi_init': 0.8, 'threshold': 3, 'penalty': 1.1, 'K': 2}  # Threshold only
             },
 
             'Precedence_R': {
                 'class': PrecedenceRollbackAgent,
-                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'threshold': 3, 'K': 10}  # Threshold only
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.8, 'phi_init': 0.8, 'threshold': 3, 'K': 2}  # Threshold only
             },
 
             'FullModel': {
                 'class': FullAgent,
-                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 1.0, 'phi_init': 0.5, 'penalty': 1.4, 'K': 10}  # EXACT existing params
+                'params': {'q_table_init': -1.0, 'alpha_phi': 0.01, 'lambda_precedence': 0.8, 'phi_init': 0.8, 'threshold': 3, 'penalty': 1.1, 'K': 2}  # EXACT existing params
             }
         }
     }
+
+
     
     all_results = []
     
@@ -259,13 +696,14 @@ def run_corrected_ablation_study(episodes=1000):
     for env_name in ['CliffWalking-v0', 'Taxi-v3']:
         print(f"\n{env_name}:")
         print("=" * 50)
-        
+
         env_configs = ablation_configs[env_name]
-        
+        simulation_name = env_configs.pop('ENV')
+
         for agent_name, config in env_configs.items():
             try:
                 result = run_exact_experiment(
-                    env_name, 
+                    simulation_name, 
                     config['class'],
                     config['params'],
                     agent_name,

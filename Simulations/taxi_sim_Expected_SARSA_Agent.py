@@ -77,7 +77,7 @@ for episode in range(episodes):
     episode_lengths.append(steps)
     episode_drops.append(drop_passsenger_pick_ghost)
     episode_deliveries.append(delivered_passenger)
-    logger.log_taxi(episode, total_reward, steps, drop_passsenger_pick_ghost, delivered_passenger)
+    logger.log_taxi(episode, total_reward, steps, drop_passsenger_pick_ghost, delivered_passenger, done)
     # Optionally print stats after every 100 episodes for feedback
     if episode % 100 == 0:
         print(f"Episode {episode} - Total Reward: {total_reward} - Steps: {steps} - Falls: {drop_passsenger_pick_ghost}, Deliveries: {delivered_passenger}")

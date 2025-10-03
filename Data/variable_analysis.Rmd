@@ -1,0 +1,188 @@
+---
+title: "variable_analysis"
+author: "Andrejs Sorstkins"
+date: "2025-09-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+
+setwd("/Users/andrejs.sorstkins/Documents/Precedence/Data/varaible_analysis/")
+
+# Load data
+ablation_results_K  <- read.csv("./ablation_results_K.csv")
+ablation_results_lambda  <- read.csv("./ablation_results_lambda.csv")
+ablation_results_penalty      <- read.csv("./ablation_results_penalty.csv")
+ablation_results_phi      <- read.csv("./ablation_results_phi.csv")
+ablation_results_threshold      <- read.csv("./ablation_results_threshold.csv")
+
+```
+
+## Cliff variables
+
+```{r pressure, echo=FALSE}
+
+dataFilteredCliffK <- ablation_results_K %>%
+  filter(Environment == "CliffWalking-v0")
+
+dataFilteredCliffK <- dataFilteredCliffK[-1, ] 
+
+dataFilteredCliffLambda <- ablation_results_lambda %>%
+  filter(Environment == "CliffWalking-v0")
+
+dataFilteredCliffLambda <- dataFilteredCliffLambda[-1, ]
+
+dataFilteredCliffPenalty <- ablation_results_penalty %>%
+  filter(Environment == "CliffWalking-v0")
+
+dataFilteredCliffPenalty <- dataFilteredCliffPenalty[-1, ]
+
+dataFilteredCliffPhi <- ablation_results_phi %>%
+  filter(Environment == "CliffWalking-v0")
+
+dataFilteredCliffPhi <- dataFilteredCliffPhi[-1, ]
+
+dataFilteredCliffThreshold <- ablation_results_threshold %>%
+  filter(Environment == "CliffWalking-v0")
+
+dataFilteredCliffThreshold <- dataFilteredCliffThreshold[-1, ]
+
+## Combine dataframes
+dataFilteredCliffK$Variable <- "K"
+dataFilteredCliffLambda$Variable <- "Lambda"
+dataFilteredCliffPenalty$Variable <- "Penalty"
+dataFilteredCliffPhi$Variable <- "Phi"
+dataFilteredCliffThreshold$Variable <- "Threshold"
+combined_data_Cliff <- rbind(dataFilteredCliffK, dataFilteredCliffLambda, dataFilteredCliffPenalty, dataFilteredCliffPhi, dataFilteredCliffThreshold)
+
+combined_data_Cliff
+#save csv
+write.csv(combined_data_Cliff, "combined_data_Cliff.csv", row.names = FALSE)
+
+
+```
+
+## Taxi Variables 
+
+```{r}
+dataFilteredTaxiK <- ablation_results_K %>%
+  filter(Environment == "Taxi-v3")
+
+dataFilteredTaxiK <- dataFilteredTaxiK[-1, ]   # remove first row
+
+dataFilteredTaxiLambda <- ablation_results_lambda %>%
+  filter(Environment == "Taxi-v3")
+
+dataFilteredTaxiLambda <- dataFilteredTaxiLambda[-1, ] 
+
+dataFilteredTaxiPenalty <- ablation_results_penalty %>%
+  filter(Environment == "Taxi-v3")
+
+dataFilteredTaxiPenalty <- dataFilteredTaxiPenalty[-1, ] 
+
+dataFilteredTaxiPhi <- ablation_results_phi %>%
+  filter(Environment == "Taxi-v3")
+
+dataFilteredTaxiPhi <- dataFilteredTaxiPhi[-1, ] 
+
+dataFilteredTaxiThreshold <- ablation_results_threshold %>%
+  filter(Environment == "Taxi-v3")
+
+dataFilteredTaxiThreshold <- dataFilteredTaxiThreshold[-1, ] 
+
+## Combine dataframes
+dataFilteredTaxiK$Variable <- "K"
+dataFilteredTaxiLambda$Variable <- "Lambda"
+dataFilteredTaxiPenalty$Variable <- "Penalty"
+dataFilteredTaxiPhi$Variable <- "Phi"
+dataFilteredTaxiThreshold$Variable <- "Threshold"
+
+
+combined_data_taxi <- rbind(dataFilteredTaxiK, dataFilteredTaxiLambda, dataFilteredTaxiPenalty, dataFilteredTaxiPhi, dataFilteredTaxiThreshold)
+
+combined_data_taxi
+
+#save csv
+write.csv(combined_data_taxi, "combined_data_taxi.csv", row.names = FALSE) 
+
+```
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+```{r}
+
+
+
+
+
+
+```
+# Percentage Difference 
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+
+
+make_plot <- function(data, fill_color, title, xlab) {
+  ggplot(data, aes(x = reorder(Agent, -MeanReward), y = MeanReward)) +
+    geom_bar(stat="identity", fill=fill_color) +
+    geom_errorbar(aes(ymin = MeanReward - StdReward, ymax = MeanReward + StdReward),
+                  width = 0.2) +
+    geom_text(aes(label = sprintf("%.1f%%", perc_diff)), 
+              vjust = -0.8, size = 5, fontface = "bold") +
+    theme_minimal(base_size = 16) +
+    labs(title = title, x = xlab, y = "Mean Reward")
+}
+
+# Plots
+p1 <- make_plot(dataFilteredTaxiK, "steelblue", "Effect of K on Reward", "K Value")
+p2 <- make_plot(dataFilteredTaxiLambda, "pink", "Effect of Lambda on Reward", "Lambda Value")
+p3 <- make_plot(dataFilteredTaxiPenalty, "forestgreen", "Effect of Penalty on Reward", "Penalty Value")
+p4 <- make_plot(dataFilteredTaxiPhi, "orange", "Effect of Phi on Reward", "Phi Value")
+
+
+ggsave("taxi_results.png",
+       grid.arrange(p1, p2, p3, p4, ncol = 2),
+       width = 15, height = 9, dpi = 300)
+
+
+
+```
+
+# Cliff Walking Environment
+
+
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+
+p1 <- make_plot(dataFilteredCliffK, "steelblue", "Effect of K on Reward", "K Value")
+p2 <- make_plot(dataFilteredCliffLambda, "pink", "Effect of Lambda on Reward", "Lambda Value")
+p3 <- make_plot(dataFilteredCliffPenalty, "forestgreen", "Effect of Penalty on Reward", "Penalty Value")
+p4 <- make_plot(dataFilteredCliffPhi, "orange", "Effect of Phi on Reward", "Phi Value")
+
+# Arrange all plots
+grid.arrange(p1, p2, p3, p4, ncol = 2)
+
+ggsave("cliff_results.png",
+       grid.arrange(p1, p2, p3, p4, ncol = 2),
+       width = 15, height = 9, dpi = 300)
+
+
+```

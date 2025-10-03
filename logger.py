@@ -13,21 +13,21 @@ class loggerCSV:
             self.file.write("Episode,TotalReward,Steps,drop_passsenger_pick_ghost,delivered_passenger\n")
         elif mod == "taxi_mod":
             self.file.write("Episode,TotalReward,Steps,drop_passsenger_pick_ghost,delivered_passenger,Rollbacks\n")
-    
-    def log_cliff(self, episode, total_reward, steps, falls):
-        self.file.write(f"{episode},{total_reward},{steps},{falls}\n")
-        self.file.flush()
-    
-    def log_cliff_Mod(self, episode, total_reward, steps, falls, rollbacks):
-        self.file.write(f"{episode},{total_reward},{steps},{falls},{rollbacks}\n")
+
+    def log_cliff(self, episode, total_reward, steps, falls, doneStatus):
+        self.file.write(f"{episode},{total_reward},{steps},{falls},{doneStatus}\n")
         self.file.flush()
 
-    def log_taxi(self, episode, total_reward, steps, drop_passsenger_pick_ghost, delivered_passenger):
-        self.file.write(f"{episode},{total_reward},{steps},{drop_passsenger_pick_ghost},{delivered_passenger}\n")
+    def log_cliff_Mod(self, episode, total_reward, steps, falls, rollbacks, doneStatus):
+        self.file.write(f"{episode},{total_reward},{steps},{falls},{rollbacks},{doneStatus}\n")
         self.file.flush()
 
-    def log_taxi_Mod(self, episode, total_reward, steps, drop_passsenger_pick_ghost, delivered_passenger, rollbacks):
-        self.file.write(f"{episode},{total_reward},{steps},{drop_passsenger_pick_ghost},{delivered_passenger},{rollbacks}\n")
+    def log_taxi(self, episode, total_reward, steps, drop_passsenger_pick_ghost, delivered_passenger, doneStatus):
+        self.file.write(f"{episode},{total_reward},{steps},{drop_passsenger_pick_ghost},{delivered_passenger},{doneStatus}\n")
+        self.file.flush()
+
+    def log_taxi_Mod(self, episode, total_reward, steps, drop_passsenger_pick_ghost, delivered_passenger, rollbacks, doneStatus):
+        self.file.write(f"{episode},{total_reward},{steps},{drop_passsenger_pick_ghost},{delivered_passenger},{rollbacks},{doneStatus}\n")
         self.file.flush()
     
 

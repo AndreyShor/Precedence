@@ -1,0 +1,3 @@
+Environment,Agent,param_name,param_value,MeanReward,StdReward,BaseReward,Uplift
+CliffWalking-v0,FullModel_K_2,K,2,-171.566,147.8406,-420.141,248.57500000000002
+Taxi-v3,FullModel_K_0,K,0,-561.998,252.6621,-1628.152,1066.154

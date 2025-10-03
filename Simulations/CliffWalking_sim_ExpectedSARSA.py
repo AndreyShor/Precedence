@@ -74,7 +74,7 @@ for episode in range(episodes):# Reset agent's Q-table for each episode
     episode_falls.append(number_falls)
     
     # Optionally print stats after every 100 episodes for feedback
-    logger.log_cliff(episode, total_reward, steps, number_falls)
+    logger.log_cliff(episode, total_reward, steps, number_falls, done)
 
     if episode % 10 == 0:
         print(f"Episode {episode} - Total Reward: {total_reward} - Steps: {steps} - Falls: {number_falls}")

@@ -14,8 +14,8 @@ env = gym.make("CliffWalking-v0")
 # Initialize Q-learning agent
 
 # Parameters for Q-learning
-episodes = 1000  # Number of episodes
-max_steps = 400  # Max steps per episode
+episodes = 100000  # Number of episodes
+max_steps = 700  # Max steps per episode
 
 seeds = list(range(episodes)) 
 
@@ -26,7 +26,7 @@ episode_falls = []  # Number of falls off the cliff per episode
 episode_rollbacks = []  # Number of rollbacks per episode
 
 # agent = QLearningReversableAgent(n_actions=env.action_space.n, n_states=env.observation_space.n, revers_penaltyLimit = 80) # type: ignore
-agent = FullAgent(n_actions=env.action_space.n, n_states=env.observation_space.n, q_table_init=-1.0, alpha_phi=0.01, lambda_precedence=1.0, phi_init=0.5, threshold=3, penalty=1.4, K=10) # type: ignore
+agent = FullAgent(n_actions=env.action_space.n, n_states=env.observation_space.n, q_table_init=-1.0, alpha_phi=0.01, lambda_precedence=0.6, phi_init=0.1, threshold=3, penalty=1.1, K=2) # type: ignore
 logger = loggerCSV("CliffWalking_sim_Q_Agent_MOD.csv", "cliff_mod")
 # Training loop
 for episode in range(episodes):
@@ -37,6 +37,7 @@ for episode in range(episodes):
     steps = 0
     number_falls = 0  # Count of falls off the cliff
     number_rollbacks = 0  # Count of rollbacks
+    doneStatus = False
     
     # Run the episode
     for _ in range(max_steps):
@@ -62,9 +63,10 @@ for episode in range(episodes):
         steps += 1
         # Move to the next state
         state = next_state
-        
-        # If done (agent reaches the goal
+
+        # If done (agent reaches the goal)
         if done:
+            doneStatus = True
             break
     
     # Collect statistics after each episode
@@ -72,9 +74,9 @@ for episode in range(episodes):
     episode_lengths.append(steps)
     episode_falls.append(number_falls)
     episode_rollbacks.append(number_rollbacks)
-    logger.log_cliff_Mod(episode, total_reward, steps, number_falls, number_rollbacks)
+    logger.log_cliff_Mod(episode, total_reward, steps, number_falls, number_rollbacks, doneStatus)
     # Optionally print stats after every 100 episodes for feedback
-    if episode % 10 == 0:
+    if episode % 10000 == 0:
         print(f"Episode {episode} - Total Reward: {total_reward} - Steps: {steps} - Falls: {number_falls}, Rollbacks: {number_rollbacks}")
 
 # After training, calculate some statistics

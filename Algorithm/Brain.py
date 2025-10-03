@@ -38,6 +38,7 @@ class QLearningAgent:
         """Reset the Q-table to zero."""
         self.q_table.fill(0.0)
     
+
 class FullAgent:
     def __init__(self, n_states, n_actions, alpha=0.1, gamma=0.99, epsilon=0.1,
                  K=10, alpha_phi=0.01, q_table_init=-1.0, lambda_precedence=1.0, phi_init=0.5, threshold=0.8, penalty=1.2):
@@ -114,7 +115,7 @@ class FullAgent:
         self.phi.fill(self.phi_init)
         self.precedence_buffer.clear()
         self.time_step = 0
- 
+
 # SARSA Agent (on-policy TD control)
 class SarsaAgent:
     def __init__(self, n_states, n_actions, alpha=0.1, gamma=0.99, epsilon=0.1):

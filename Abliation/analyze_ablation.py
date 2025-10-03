@@ -231,8 +231,8 @@ if __name__ == "__main__":
     # Run all analyses
     analyze_results()
     component_contribution_analysis()
-    #critical_insights()
-    #generate_manuscript_table()
+    critical_insights()
+    generate_manuscript_table()
     
     print(f"\n{'='*80}")
     print("ANALYSIS COMPLETE")

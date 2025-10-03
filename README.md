@@ -23,9 +23,7 @@ This layout makes it easy to:
 ├── Simulations/
 │   ├── <YourSimulationA>.py     # Environment + algorithm wiring
 │   └── <YourSimulationB>.py     # Environment + algorithm wiring
-├── gym-sokoban-default/
-│   ├── env_human.py             # Run Sokoban in manual/play mode
-│   └── ...                      # Sokoban Gym environment implementation
+implementation
 └── logger.py                    # Logger logic for Taxi and CliffWalking environments
 ```
 
