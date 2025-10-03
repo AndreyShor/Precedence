@@ -77,4 +77,13 @@ If you use this repository or its results in your research, please cite the asso
 
 ## License
 
-The license for this work is provided by the repository owner. See the repository for licensing information.
+Copyright (c) 2025 Andrejs Sorstkins
+
+All rights reserved.
+
+Permission to use, copy, modify, or distribute this software (in whole or in part) 
+is granted only with the express prior written consent of the copyright holder.
+
+Unauthorized use is strictly prohibited.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
