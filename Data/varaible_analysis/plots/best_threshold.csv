@@ -1,3 +1,0 @@
-Environment,Agent,param_name,param_value,MeanReward,StdReward,BaseReward,Uplift
-CliffWalking-v0,FullModel_Threshold_1_2,threshold,1.2,-122.926,26.873,-384.057,261.13100000000003
-Taxi-v3,FullModel_Threshold_1_2,threshold,1.2,-42.977,15.8837,-1623.596,1580.619
